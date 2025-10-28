@@ -3,218 +3,240 @@ using DataCollector.Application.DTOs;
 namespace DataCollector.Application.Interfaces;
 
 /// <summary>
-/// Service for managing DataSources with complete API configuration
-/// Supports manual creation and generation from Swagger/GraphQL/WSDL
+/// Service interface for DataSource management
+/// Supports manual creation and generation from various sources
 /// </summary>
 public interface IDataSourceService
 {
-    // ============================================================================
-    // Manual DataSource Creation (REST, etc.)
-    // ============================================================================
+    // ==================== MANUAL DATASOURCE CREATION ====================
     
     /// <summary>
-    /// Create a DataSource manually with complete configuration
-    /// Used for REST APIs where you define endpoints, headers, auth, functions manually
+    /// Create a DataSource manually by defining all configuration
     /// </summary>
-    Task<DataSourceDetailDto> CreateManualAsync(
+    Task<DataSourceResponseDto> CreateManualAsync(
         Guid tenantId, 
         CreateManualDataSourceRequest request, 
-        string createdBy,
         CancellationToken cancellationToken = default);
     
-    // ============================================================================
-    // Generate DataSource from External Sources
-    // ============================================================================
+    /// <summary>
+    /// Update an existing DataSource
+    /// </summary>
+    Task<DataSourceResponseDto> UpdateAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CreateManualDataSourceRequest request, 
+        CancellationToken cancellationToken = default);
+    
+    // ==================== DATASOURCE GENERATION ====================
     
     /// <summary>
     /// Generate DataSource from Swagger/OpenAPI URL
-    /// Automatically discovers all operations and creates functions
     /// </summary>
-    Task<DataSourceDetailDto> GenerateFromSwaggerUrlAsync(
-        Guid tenantId,
-        GenerateDataSourceFromUrlRequest request,
-        string createdBy,
+    Task<DataSourceResponseDto> GenerateFromSwaggerUrlAsync(
+        Guid tenantId, 
+        GenerateDataSourceFromUrlRequest request, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Generate DataSource from Swagger/OpenAPI file content
     /// </summary>
-    Task<DataSourceDetailDto> GenerateFromSwaggerContentAsync(
-        Guid tenantId,
-        GenerateDataSourceFromContentRequest request,
-        string createdBy,
+    Task<DataSourceResponseDto> GenerateFromSwaggerContentAsync(
+        Guid tenantId, 
+        GenerateDataSourceFromContentRequest request, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Generate DataSource from GraphQL endpoint with introspection
+    /// Generate DataSource from GraphQL endpoint (with introspection)
     /// </summary>
-    Task<DataSourceDetailDto> GenerateFromGraphQLAsync(
-        Guid tenantId,
-        GenerateDataSourceFromUrlRequest request,
-        string createdBy,
+    Task<DataSourceResponseDto> GenerateFromGraphQLAsync(
+        Guid tenantId, 
+        GenerateDataSourceFromUrlRequest request, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Generate DataSource from SOAP WSDL
     /// </summary>
-    Task<DataSourceDetailDto> GenerateFromWsdlAsync(
-        Guid tenantId,
-        GenerateDataSourceFromUrlRequest request,
-        string createdBy,
-        CancellationToken cancellationToken = default);
-    
-    // ============================================================================
-    // CRUD Operations
-    // ============================================================================
-    
-    /// <summary>
-    /// Get DataSource by ID with full details
-    /// </summary>
-    Task<DataSourceDetailDto> GetByIdAsync(
+    Task<DataSourceResponseDto> GenerateFromWsdlAsync(
         Guid tenantId, 
-        Guid id, 
+        GenerateDataSourceFromUrlRequest request, 
         CancellationToken cancellationToken = default);
     
+    // ==================== DATASOURCE RETRIEVAL ====================
+    
     /// <summary>
-    /// Get all DataSources for a tenant (summary view)
+    /// Get DataSource by ID
     /// </summary>
-    Task<IEnumerable<DataSourceDto>> GetAllAsync(
+    Task<DataSourceResponseDto> GetByIdAsync(
         Guid tenantId, 
+        Guid dataSourceId, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Update DataSource configuration
+    /// Get all DataSources for a tenant
     /// </summary>
-    Task<DataSourceDetailDto> UpdateAsync(
+    Task<List<DataSourceResponseDto>> GetAllAsync(
         Guid tenantId, 
-        Guid id, 
-        CreateManualDataSourceRequest request, 
-        string updatedBy,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Delete DataSource (soft delete)
-    /// Cannot delete if pipelines are using it
-    /// </summary>
-    Task<bool> DeleteAsync(
-        Guid tenantId, 
-        Guid id, 
-        string deletedBy,
-        CancellationToken cancellationToken = default);
-    
-    // ============================================================================
-    // Function Management
-    // ============================================================================
-    
-    /// <summary>
-    /// Get all functions available in a DataSource
-    /// </summary>
-    Task<IEnumerable<DataSourceFunctionDto>> GetFunctionsAsync(
-        Guid tenantId,
-        Guid dataSourceId,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Get a specific function from a DataSource
-    /// </summary>
-    Task<FunctionDefinitionDto> GetFunctionAsync(
-        Guid tenantId,
-        Guid dataSourceId,
-        string functionId,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Add a new function to an existing DataSource
-    /// </summary>
-    Task<FunctionDefinitionDto> AddFunctionAsync(
-        Guid tenantId,
-        Guid dataSourceId,
-        FunctionDefinitionDto function,
-        string updatedBy,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Update an existing function in a DataSource
-    /// </summary>
-    Task<FunctionDefinitionDto> UpdateFunctionAsync(
-        Guid tenantId,
-        Guid dataSourceId,
-        string functionId,
-        FunctionDefinitionDto function,
-        string updatedBy,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Remove a function from a DataSource
-    /// Cannot remove if pipelines are using it
-    /// </summary>
-    Task<bool> RemoveFunctionAsync(
-        Guid tenantId,
-        Guid dataSourceId,
-        string functionId,
-        string updatedBy,
-        CancellationToken cancellationToken = default);
-    
-    // ============================================================================
-    // Testing & Validation
-    // ============================================================================
-    
-    /// <summary>
-    /// Test connection to DataSource
-    /// Optionally test a specific function
-    /// </summary>
-    Task<TestDataSourceResult> TestConnectionAsync(
-        Guid tenantId, 
-        TestDataSourceRequest request,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Validate a source before generating DataSource
-    /// </summary>
-    Task<ValidateSourceResult> ValidateSourceAsync(
-        ValidateSourceRequest request,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Get available operations from a source (preview before generating)
-    /// </summary>
-    Task<IEnumerable<string>> GetAvailableOperationsAsync(
-        DataSourceType sourceType,
-        string source,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Preview generated DataSource without saving
-    /// </summary>
-    Task<DataSourceDetailDto> PreviewGeneratedDataSourceAsync(
-        GenerateDataSourceFromUrlRequest request,
-        CancellationToken cancellationToken = default);
-    
-    // ============================================================================
-    // Statistics & Analytics
-    // ============================================================================
-    
-    /// <summary>
-    /// Get usage statistics for a DataSource
-    /// </summary>
-    Task<DataSourceStatsDto> GetStatsAsync(
-        Guid tenantId,
-        Guid dataSourceId,
         CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Get DataSources by category
     /// </summary>
-    Task<IEnumerable<DataSourceDto>> GetByCategoryAsync(
-        Guid tenantId,
-        string category,
+    Task<List<DataSourceResponseDto>> GetByCategoryAsync(
+        Guid tenantId, 
+        string category, 
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Search DataSources by name, description, or tags
+    /// Get DataSources by protocol
     /// </summary>
-    Task<IEnumerable<DataSourceDto>> SearchAsync(
-        Guid tenantId,
-        string searchTerm,
+    Task<List<DataSourceResponseDto>> GetByProtocolAsync(
+        Guid tenantId, 
+        int protocol, 
+        CancellationToken cancellationToken = default);
+    
+    // ==================== FUNCTION MANAGEMENT ====================
+    
+    /// <summary>
+    /// Get all functions for a DataSource
+    /// </summary>
+    Task<List<FunctionDefinitionDto>> GetFunctionsAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get a specific function by ID
+    /// </summary>
+    Task<FunctionDefinitionDto> GetFunctionByIdAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        string functionId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Add a new function to a DataSource
+    /// </summary>
+    Task<FunctionDefinitionDto> AddFunctionAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        FunctionDefinitionDto function, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Update an existing function
+    /// </summary>
+    Task<FunctionDefinitionDto> UpdateFunctionAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        string functionId, 
+        FunctionDefinitionDto function, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Delete a function
+    /// </summary>
+    Task DeleteFunctionAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        string functionId, 
+        CancellationToken cancellationToken = default);
+    
+    // ==================== VALIDATION & TESTING ====================
+    
+    /// <summary>
+    /// Validate a source before generating DataSource
+    /// </summary>
+    Task<bool> ValidateSourceAsync(
+        ValidateDataSourceRequest request, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Analyze source to get metadata
+    /// </summary>
+    Task<object> AnalyzeSourceAsync(
+        AnalyzeDataSourceRequest request, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Get available operations from source
+    /// </summary>
+    Task<List<string>> GetOperationsFromSourceAsync(
+        GetOperationsRequest request, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Preview generated DataSource without saving
+    /// </summary>
+    Task<DataSourceResponseDto> PreviewDataSourceAsync(
+        PreviewDataSourceRequest request, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Test a DataSource function with sample parameters
+    /// </summary>
+    Task<object> TestFunctionAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        string functionId, 
+        Dictionary<string, object> parameters, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Test DataSource connection
+    /// </summary>
+    Task<bool> TestConnectionAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    // ==================== LIFECYCLE MANAGEMENT ====================
+    
+    /// <summary>
+    /// Activate a DataSource
+    /// </summary>
+    Task ActivateAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Deactivate a DataSource
+    /// </summary>
+    Task DeactivateAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Delete a DataSource (soft delete)
+    /// </summary>
+    Task DeleteAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Clone a DataSource
+    /// </summary>
+    Task<DataSourceResponseDto> CloneAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        string newName, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Export DataSource as JSON
+    /// </summary>
+    Task<string> ExportAsync(
+        Guid tenantId, 
+        Guid dataSourceId, 
+        CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Import DataSource from JSON
+    /// </summary>
+    Task<DataSourceResponseDto> ImportAsync(
+        Guid tenantId, 
+        string dataSourceJson, 
         CancellationToken cancellationToken = default);
 }
