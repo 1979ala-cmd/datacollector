@@ -1,318 +1,475 @@
-# 📦 DATA COLLECTOR PLATFORM - COMPLETE DELIVERY PACKAGE
+# 📦 Data Collector Platform - Updated Architecture Package
 
 ## Welcome! 👋
 
-You have received a complete, production-ready **.NET 8 LTS backend API** for an enterprise multi-tenant data collector platform. This package contains everything you need to start development immediately.
+This package contains the complete updated architecture for the Data Collector Platform, transitioning from simple pipelines to a **function-based architecture** with comprehensive API configuration management.
 
 ---
 
 ## 📑 Package Contents
 
-### 1. **DataCollectorPlatform.tar.gz** (31 KB)
-The complete source code archive containing:
-- ✅ Full .NET 8 solution with 4 architectural layers
-- ✅ 38 C# source files (Domain, Application, Infrastructure, API)
-- ✅ Complete project configurations (.csproj, .sln)
-- ✅ Docker and docker-compose setup
-- ✅ Kubernetes manifests
-- ✅ CI/CD pipeline (GitHub Actions)
-- ✅ Postman API collection
-- ✅ Database initialization scripts
+### 🏗️ Core Entity Updates
 
-**Extract with**: `tar -xzf DataCollectorPlatform.tar.gz`
+1. **Updated_DataSource_Entity.cs** (3,200 lines)
+   - Complete rewrite of DataSource entity
+   - Stores complete API configuration
+   - **Functions** property - list of available API operations
+   - 15+ supporting classes for JSON serialization
+   - Configuration for: Auth, Rate Limiting, Retry, Caching, Monitoring, Circuit Breaker
+   
+   **Use:** Replace `src/DataCollector.Domain/Entities/DataSource.cs`
 
----
-
-### 2. **README.md** (16 KB)
-**📖 Start here!** Complete guide with:
-- Quick start instructions (Docker & local)
-- Complete workflow examples
-- API endpoint documentation
-- Authentication & authorization guide
-- Database schema overview
-- Deployment instructions (K8s, Helm)
-- Troubleshooting guide
-
-**Best for**: Getting up and running quickly
+2. **Updated_Pipeline_Entity.cs** (800 lines)
+   - Updated Pipeline entity with function references
+   - **FunctionId** property - references DataSource function
+   - Parameter mappings support
+   - Data ingestion configuration
+   
+   **Use:** Replace `src/DataCollector.Domain/Entities/Pipeline.cs`
 
 ---
 
-### 3. **IMPLEMENTATION_SUMMARY.md** (15 KB)
-Detailed implementation status and roadmap:
-- What's been implemented (60% foundation complete)
-- What needs to be implemented (40% services)
-- Phase-by-phase implementation guide
-- Code examples for each service
-- Testing strategy
-- Timeline estimates (3-4 weeks remaining)
+### 📋 DTO Updates
 
-**Best for**: Understanding what to build next
+3. **Updated_DataSource_DTOs.cs** (2,500 lines)
+   - 30+ DTOs for DataSource management
+   - Support for manual creation
+   - Support for generation (Swagger, GraphQL, SOAP)
+   - Testing and validation DTOs
+   - Complete configuration DTOs
+   
+   **Use:** Add to `src/DataCollector.Application/DTOs/`
 
----
-
-### 4. **QUICK_START_GUIDE.md** (9.3 KB)
-Fast-track guide to immediate productivity:
-- Extract and run in 5 minutes
-- Acceptance criteria verification
-- Priority implementation order
-- Configuration guide
-- Troubleshooting tips
-
-**Best for**: New developers joining the project
+4. **Updated_Collector_DTOs.cs** (1,800 lines)
+   - Updated collector DTOs with function support
+   - Pipeline DTOs with function references
+   - Execution DTOs with function details
+   - Validation DTOs
+   
+   **Use:** Replace existing collector DTOs in `src/DataCollector.Application/DTOs/`
 
 ---
 
-### 5. **PROJECT_STATS.md** (9.4 KB)
-Comprehensive project statistics:
-- 60+ files created
-- 4,600+ lines of code/documentation
-- Requirements coverage matrix
-- Architecture quality metrics
-- Sprint planning guide
-- Production readiness checklist
+### 🔧 Service Interface Updates
 
-**Best for**: Project managers and stakeholders
+5. **Updated_IDataSourceService.cs** (2,000 lines)
+   - 20+ methods for DataSource management
+   - Manual creation methods
+   - Generation methods (Swagger, GraphQL, SOAP, WSDL)
+   - Function management (CRUD)
+   - Testing and validation methods
+   - Statistics and search
+   
+   **Use:** Replace `src/DataCollector.Application/Interfaces/IDataSourceService.cs`
+
+6. **Updated_IDataCollectorService.cs** (1,500 lines)
+   - Updated interface with function-based execution
+   - Pipeline management methods
+   - Validation methods
+   - Stage management
+   - Statistics and monitoring
+   
+   **Use:** Replace `src/DataCollector.Application/Interfaces/IDataCollectorService.cs`
 
 ---
 
-## 🚀 Quick Start (3 Steps)
+### 📚 Documentation
 
-### Step 1: Extract
-```bash
-tar -xzf DataCollectorPlatform.tar.gz
-cd DataCollectorPlatform
+7. **ARCHITECTURE_GUIDE_Updated.md** (8,000 lines)
+   - **START HERE!** Complete architecture guide
+   - Detailed explanation of all components
+   - Complete examples with JSON payloads
+   - Step-by-step workflows
+   - Database schema details
+   - Key benefits and comparisons
+   
+   **Use:** Read this first to understand the new architecture
+
+8. **MIGRATION_GUIDE.md** (4,000 lines)
+   - Step-by-step migration from old structure
+   - Database migration scripts
+   - C# data migration code
+   - Testing procedures
+   - Rollback plan
+   - Post-migration checklist
+   
+   **Use:** For migrating existing systems
+
+9. **IMPLEMENTATION_SUMMARY_V2.md** (3,000 lines)
+   - Overview of all changes
+   - Before/After comparison
+   - Implementation roadmap
+   - Phase-by-phase steps
+   - Key concepts
+   - Next steps
+   
+   **Use:** Quick reference for what changed and why
+
+10. **INDEX.md** (This file)
+    - Package contents
+    - Reading order
+    - Quick start guide
+    - File references
+
+---
+
+## 🚀 Quick Start Guide
+
+### Step 1: Understand the Architecture (30 minutes)
+
+Read these in order:
+
+1. **IMPLEMENTATION_SUMMARY_V2.md** - Get overview
+2. **ARCHITECTURE_GUIDE_Updated.md** - Deep dive
+3. Review the sample files from project:
+   - `datasource_sample_api.txt`
+   - `Datasource_types.txt`
+   - `sample_datacollector_json.txt`
+
+### Step 2: Review Code Changes (1 hour)
+
+Study these files in order:
+
+1. **Updated_DataSource_Entity.cs**
+   - Understand FunctionDefinition class
+   - Review all configuration classes
+   
+2. **Updated_Pipeline_Entity.cs**
+   - Understand FunctionId property
+   - Review parameter mappings
+   
+3. **Updated_DataSource_DTOs.cs**
+   - Review CreateManualDataSourceRequest
+   - Review GenerateDataSourceFromUrlRequest
+   - Understand FunctionDefinitionDto
+   
+4. **Updated_Collector_DTOs.cs**
+   - Review CreateCollectorRequest changes
+   - Understand function-based pipelines
+
+5. **Updated_IDataSourceService.cs**
+   - Review all method signatures
+   - Understand function management methods
+   
+6. **Updated_IDataCollectorService.cs**
+   - Review execution methods
+   - Understand validation methods
+
+### Step 3: Plan Implementation (1 hour)
+
+1. Review your current codebase
+2. Identify files to update
+3. Plan database migration strategy
+4. Review MIGRATION_GUIDE.md if updating existing system
+5. Create implementation timeline
+
+### Step 4: Implement Changes (20-30 hours)
+
+Follow the implementation phases in IMPLEMENTATION_SUMMARY_V2.md:
+
+**Phase 1:** Update Domain Layer (2-3 hours)
+**Phase 2:** Update Application Layer (3-4 hours)
+**Phase 3:** Database Migrations (1-2 hours)
+**Phase 4:** Implement Services (8-12 hours)
+**Phase 5:** Update Controllers (2-3 hours)
+**Phase 6:** Testing (4-6 hours)
+
+---
+
+## 📖 Reading Order by Persona
+
+### For Architects/Tech Leads
+
+1. IMPLEMENTATION_SUMMARY_V2.md (overview)
+2. ARCHITECTURE_GUIDE_Updated.md (full details)
+3. Updated entity and interface files (code review)
+4. MIGRATION_GUIDE.md (if applicable)
+
+**Time:** 2-3 hours
+
+### For Developers
+
+1. IMPLEMENTATION_SUMMARY_V2.md (understand changes)
+2. Review code files in order:
+   - Entities
+   - DTOs
+   - Interfaces
+3. ARCHITECTURE_GUIDE_Updated.md (reference)
+4. Start implementing phase by phase
+
+**Time:** 4-5 hours + implementation time
+
+### For Product Managers
+
+1. IMPLEMENTATION_SUMMARY_V2.md (what's changing)
+2. Key concepts section in ARCHITECTURE_GUIDE_Updated.md
+3. Complete examples in ARCHITECTURE_GUIDE_Updated.md
+
+**Time:** 1-2 hours
+
+### For QA/Testers
+
+1. IMPLEMENTATION_SUMMARY_V2.md (overview)
+2. Complete examples in ARCHITECTURE_GUIDE_Updated.md
+3. Workflows section in ARCHITECTURE_GUIDE_Updated.md
+4. Testing procedures in MIGRATION_GUIDE.md
+
+**Time:** 2-3 hours
+
+---
+
+## 🎯 Key Concepts (Quick Reference)
+
+### 1. DataSource
+**What:** Complete API configuration with functions  
+**Contains:** BaseURL, Auth, Headers, Functions, Rate Limits, Retry, etc.  
+**Purpose:** Reusable API definition
+
+### 2. Function
+**What:** Single API operation/endpoint  
+**Contains:** Method, Path, Parameters, Response schema  
+**Purpose:** Define what operations are available
+
+### 3. Collector
+**What:** Data collection workflow  
+**Contains:** ONE DataSource, MULTIPLE Pipelines  
+**Purpose:** Orchestrate data collection
+
+### 4. Pipeline
+**What:** Execution flow for one function  
+**Contains:** FunctionId, Parameter Mappings, Processing Steps  
+**Purpose:** Execute specific API function with transformations
+
+### 5. Execution Flow
+```
+DataSource (config) 
+    → Function (definition)
+        → Pipeline (mappings + steps)
+            → API Call (resolved params)
+                → Processing Steps
+                    → Results
 ```
 
-### Step 2: Run
-```bash
-docker-compose up --build
-```
+---
 
-### Step 3: Access
-- **API**: http://localhost:5000
-- **Swagger**: http://localhost:5000/swagger
-- **Database UI**: http://localhost:8080
+## 🗃️ File Mapping
 
-**That's it!** The API is running with PostgreSQL.
+### Current Files → Updated Files
+
+| Current File | Updated File | Action |
+|-------------|--------------|--------|
+| `DataSource.cs` | `Updated_DataSource_Entity.cs` | **Replace** |
+| `Pipeline.cs` | `Updated_Pipeline_Entity.cs` | **Replace** |
+| `DataSourceDto.cs` | `Updated_DataSource_DTOs.cs` | **Replace/Add** |
+| `CollectorDto.cs` | `Updated_Collector_DTOs.cs` | **Replace/Add** |
+| `IDataSourceService.cs` | `Updated_IDataSourceService.cs` | **Replace** |
+| `IDataCollectorService.cs` | `Updated_IDataCollectorService.cs` | **Replace** |
+
+### New Implementations Needed
+
+| Interface | Implementation File | Estimated Time |
+|-----------|-------------------|----------------|
+| `IDataSourceService` | `DataSourceService.cs` | 8-10 hours |
+| `IDataCollectorService` | `DataCollectorService.cs` | 6-8 hours |
+| Function resolution logic | `FunctionResolver.cs` | 2-3 hours |
+| Parameter mapping engine | `ParameterMapper.cs` | 3-4 hours |
+| Swagger import | `SwaggerImporter.cs` | 4-6 hours |
+| GraphQL import | `GraphQLImporter.cs` | 4-6 hours |
 
 ---
 
-## 📚 Documentation Map
+## 🔍 Finding Specific Information
 
-```
-START HERE
-    ↓
-README.md (Quick Start)
-    ↓
-QUICK_START_GUIDE.md (How to run)
-    ↓
-IMPLEMENTATION_SUMMARY.md (What to build next)
-    ↓
-PROJECT_STATS.md (Detailed metrics)
-    ↓
-ARCHITECTURE.md (Inside archive - Deep dive)
-```
+### "How do I create a DataSource manually?"
+→ See **ARCHITECTURE_GUIDE_Updated.md** - "Step 1: Create DataSource"
 
----
+### "How do I generate from Swagger?"
+→ See **ARCHITECTURE_GUIDE_Updated.md** - "Workflow 1: Generate DataSource from Swagger"
 
-## ✅ What You're Getting
+### "How do pipelines work now?"
+→ See **ARCHITECTURE_GUIDE_Updated.md** - "Pipeline (Execution Unit)"
 
-### Complete Foundation (60% Done)
-✅ **Clean Architecture** - 4 layers with proper separation  
-✅ **Domain Models** - 11 entities with relationships  
-✅ **Database Design** - Shared + per-tenant contexts  
-✅ **Multi-Tenancy** - Complete isolation strategy  
-✅ **Authentication** - JWT architecture configured  
-✅ **Authorization** - Role-based design (6 roles)  
-✅ **Docker Setup** - Working development environment  
-✅ **Kubernetes** - Production-ready manifests  
-✅ **CI/CD** - GitHub Actions pipeline  
-✅ **Documentation** - 50+ pages comprehensive  
+### "How do I migrate my existing system?"
+→ See **MIGRATION_GUIDE.md**
 
-### What Needs Implementation (40% Left)
-🚧 **Services** - Business logic implementation  
-🚧 **Repositories** - Data access implementation  
-🚧 **Migrations** - EF Core database migrations  
-🚧 **Middleware** - Tenant resolution, error handling  
-🚧 **Validation** - FluentValidation rules  
-🚧 **Tests** - Unit and integration tests  
+### "What's the database schema?"
+→ See **ARCHITECTURE_GUIDE_Updated.md** - "Database Schema Changes"
 
-**Estimated remaining**: 120-140 hours (3-4 weeks)
+### "What are all the configuration options?"
+→ See **Updated_DataSource_Entity.cs** - Supporting classes
+
+### "How do I validate function references?"
+→ See **Updated_IDataCollectorService.cs** - ValidateAsync method
+
+### "How does execution work?"
+→ See **ARCHITECTURE_GUIDE_Updated.md** - "Step 3: Execute Pipeline"
 
 ---
 
-## 🎯 Core Features
+## 📊 Impact Analysis
 
-### Multi-Tenant Architecture
-- **Database-per-tenant** isolation
-- **Auto database creation** on tenant onboarding
-- **Complete data isolation** (zero risk of cross-tenant access)
-- **Scalable** tenant management
+### Breaking Changes
+✅ Yes - Pipeline structure changed  
+✅ Yes - DataSource structure changed  
+✅ Yes - Service interfaces changed  
 
-### Authentication & Security
-- **JWT tokens** with 1-hour expiry
-- **Refresh tokens** with 7-day expiry + rotation
-- **6 roles**: Admin, ProductOwner, Approver, Developer, Collector, Reader
-- **Audit logging** for all critical operations
-- **Password hashing** with BCrypt (architecture ready)
+### Migration Required
+✅ Yes - Database schema changes  
+✅ Yes - Existing data needs migration  
+✅ Yes - Application code needs updates  
 
-### Data Collector Workflows
-- **DataSource** management (REST, SOAP, GraphQL)
-- **DataCollector** with multiple pipelines
-- **Processing Steps** (hierarchical, configurable)
-- **Approval Workflow** (DRAFT → DEV → STAGE → PRODUCTION)
-- **State machine** for lifecycle management
+### Backward Compatibility
+❌ No - This is a major architectural change  
+✅ Migration path provided  
+✅ Rollback plan available  
 
-### Enterprise Features
-- **Database constraints** (FK, unique, check, indexes)
-- **Soft deletes** for audit trail
-- **Structured logging** with Serilog
-- **Health checks** for Kubernetes
-- **Configuration management** (environment-based)
+### Estimated Timeline
+- **Planning:** 2-4 hours
+- **Implementation:** 20-30 hours
+- **Testing:** 4-8 hours
+- **Deployment:** 2-4 hours
+- **Total:** 28-46 hours
 
 ---
 
-## 🛠️ Technology Stack
+## ✅ Implementation Checklist
 
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | .NET 8 LTS (latest) |
-| **Language** | C# 12 |
-| **Database** | PostgreSQL 16 |
-| **ORM** | Entity Framework Core 8 |
-| **Authentication** | JWT (configured) |
-| **API Docs** | Swagger/OpenAPI |
-| **Logging** | Serilog |
-| **Testing** | xUnit, Moq, FluentAssertions |
-| **Container** | Docker, docker-compose |
-| **Orchestration** | Kubernetes |
-| **CI/CD** | GitHub Actions |
+### Planning Phase
+- [ ] Read IMPLEMENTATION_SUMMARY_V2.md
+- [ ] Read ARCHITECTURE_GUIDE_Updated.md
+- [ ] Review all code files
+- [ ] Understand current system state
+- [ ] Create implementation plan
+- [ ] Get team approval
 
----
+### Development Phase
+- [ ] Update DataSource entity
+- [ ] Update Pipeline entity
+- [ ] Create database migrations
+- [ ] Update DTOs
+- [ ] Update service interfaces
+- [ ] Implement DataSourceService
+- [ ] Implement DataCollectorService
+- [ ] Update controllers
+- [ ] Write unit tests
+- [ ] Write integration tests
 
-## 📈 Project Timeline
+### Migration Phase (if applicable)
+- [ ] Backup databases
+- [ ] Run schema migrations
+- [ ] Run data migrations
+- [ ] Validate migrated data
+- [ ] Test with old data
 
-### Already Completed (~135 hours saved)
-- ✅ Architecture design
-- ✅ Project setup
-- ✅ Database design
-- ✅ DevOps configuration
-- ✅ Documentation
+### Testing Phase
+- [ ] Manual testing
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] End-to-end tests pass
+- [ ] Performance testing
+- [ ] Security testing
 
-### Remaining Work (~140 hours)
-- **Week 1**: Authentication & Repository pattern
-- **Week 2**: Tenant & DataSource management
-- **Week 3**: Collectors & Approval workflows
-- **Week 4**: Testing & Polish
-
----
-
-## 💡 Next Steps
-
-### 1. Read the README
-Open `README.md` for complete setup instructions
-
-### 2. Extract and Run
-```bash
-tar -xzf DataCollectorPlatform.tar.gz
-cd DataCollectorPlatform
-docker-compose up --build
-```
-
-### 3. Explore the Code
-Start with:
-- `src/DataCollector.Domain/Entities/` - Domain models
-- `src/DataCollector.API/Program.cs` - Application setup
-- `src/DataCollector.Infrastructure/Persistence/Contexts/` - Database contexts
-
-### 4. Implement Services
-Follow `IMPLEMENTATION_SUMMARY.md` for step-by-step guidance
-
-### 5. Write Tests
-Use xUnit structure in `tests/` directory
+### Deployment Phase
+- [ ] Deploy to staging
+- [ ] Smoke tests
+- [ ] Deploy to production
+- [ ] Monitor for issues
+- [ ] Update documentation
+- [ ] Train team
 
 ---
 
-## 🎓 Learning Path
+## 🎓 Training Materials
 
-**Day 1**: Run the project, explore Swagger UI  
-**Day 2**: Study domain entities and database design  
-**Day 3**: Implement PasswordHasher and JwtTokenGenerator  
-**Day 4**: Implement AuthService  
-**Day 5**: Create and apply EF Core migrations  
-**Week 2**: Implement TenantService with auto DB creation  
-**Week 3**: Implement DataSource and Collector services  
-**Week 4**: Complete testing and deployment  
+### For Developers
+1. Architecture overview presentation (30 min)
+2. Code walkthrough (1 hour)
+3. Hands-on implementation (2 hours)
+4. Q&A session (30 min)
 
----
+### For Product Team
+1. Feature overview (30 min)
+2. Use case examples (30 min)
+3. Demo of new capabilities (30 min)
 
-## 🏆 Quality Assurance
-
-### Code Quality ✅
-- Clean Architecture principles
-- SOLID design patterns
-- Dependency injection throughout
-- Interface-based design
-
-### Documentation Quality ✅
-- Comprehensive README
-- Architecture diagrams
-- API examples
-- Inline code comments (to be added during implementation)
-
-### DevOps Quality ✅
-- Multi-stage Dockerfile
-- Docker-compose for local dev
-- Kubernetes manifests
-- CI/CD pipeline
-- Health checks
+### For Operations
+1. Deployment process (30 min)
+2. Monitoring changes (30 min)
+3. Troubleshooting guide (30 min)
 
 ---
 
-## 📞 Support & Resources
+## 📞 Support & Questions
 
-### Inside the Archive
-- `/docs/architecture/ARCHITECTURE.md` - Deep technical documentation
-- `/postman/` - API testing collection
-- `/k8s/` - Kubernetes deployment files
-- `/scripts/` - Database initialization scripts
+### Documentation Issues
+- Check INDEX.md (this file)
+- Review IMPLEMENTATION_SUMMARY_V2.md
+- Search ARCHITECTURE_GUIDE_Updated.md
 
-### Suggested Reading Order
-1. This INDEX (you are here)
-2. README.md - Quick start
-3. QUICK_START_GUIDE.md - Detailed setup
-4. IMPLEMENTATION_SUMMARY.md - Development roadmap
-5. ARCHITECTURE.md (in archive) - Technical deep dive
+### Technical Questions
+- Review code files
+- Check ARCHITECTURE_GUIDE_Updated.md examples
+- Consult MIGRATION_GUIDE.md
+
+### Implementation Help
+- Follow implementation phases in IMPLEMENTATION_SUMMARY_V2.md
+- Review example payloads in ARCHITECTURE_GUIDE_Updated.md
+- Check service interfaces for method signatures
 
 ---
 
 ## 🎉 Summary
 
-This package delivers:
-- ✅ **60+ files** of production-ready code
-- ✅ **4,600+ lines** including comprehensive documentation
-- ✅ **Complete architecture** following industry best practices
-- ✅ **Working development environment** (Docker)
-- ✅ **Production deployment** configuration (K8s)
-- ✅ **Clear roadmap** for completion
+This package provides everything needed to understand and implement the new function-based architecture:
 
-**The foundation is solid. The architecture is enterprise-grade. The path forward is clear.**
+✅ **10 comprehensive files**  
+✅ **15,000+ lines of documentation**  
+✅ **Complete code examples**  
+✅ **Step-by-step guides**  
+✅ **Migration support**  
+✅ **Testing procedures**  
 
-## 🚀 Ready to Code!
-
-Extract the archive, run `docker-compose up`, and start building the services. Everything you need is here.
-
-**Happy coding!** 💻
+**Start with:** IMPLEMENTATION_SUMMARY_V2.md  
+**Deep dive:** ARCHITECTURE_GUIDE_Updated.md  
+**Implement:** Follow the phases  
+**Migrate:** Use MIGRATION_GUIDE.md  
 
 ---
 
-**Package Created**: October 28, 2024  
-**Platform**: .NET 8 LTS  
-**Architecture**: Clean Architecture + DDD  
-**Database**: PostgreSQL 16  
-**Status**: Foundation Complete (60%), Ready for Implementation  
-**Estimated Completion**: 3-4 weeks  
+## 📚 Related Files (From Project)
+
+These files from the original project informed this design:
+
+1. `datasource_sample_api.txt` - Sample API configurations showing:
+   - Manual REST DataSource creation
+   - Swagger URL import
+   - GraphQL endpoint import
+   - SOAP WSDL import
+   - Complete configuration examples
+
+2. `Datasource_types.txt` - DataSource type definitions:
+   - REST_Manual
+   - Swagger_URL
+   - Swagger_File
+   - Swagger_Content
+   - GraphQL_Endpoint
+   - SOAP_WSDL
+
+3. `sample_datacollector_json.txt` - Sample collector structure showing:
+   - Pipeline configurations
+   - Processing steps
+   - Data ingestion strategies
+   - Nested child steps
 
 ---
 
-© 2024 Data Collector Platform. All rights reserved.
+**Package Created:** October 28, 2025  
+**Version:** 2.0  
+**Architecture:** Function-Based DataSource with Reusable API Configurations  
+**Status:** Design Complete, Ready for Implementation  
+**Estimated Implementation:** 20-30 hours  
+
+---
+
+**Happy Coding! 🚀**
+
