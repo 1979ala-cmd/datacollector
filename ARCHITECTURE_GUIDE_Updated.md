@@ -1,414 +1,334 @@
-# Data Collector Platform - Updated Architecture Guide
+# Data Collector Platform - CORRECTED Architecture
 
-## 📋 Overview
+## 🎯 Critical Clarification
 
-This document explains the updated architecture where **DataSources** store complete API configurations including functions, and **Collectors** reference these functions through pipelines.
+**The platform uses a Template/Instance model:**
 
----
-
-## 🏗️ Architecture Components
-
-### 1. DataSource (API Configuration Store)
-
-A **DataSource** is a complete API configuration that includes:
-
-- **Base URL and Protocol** (REST, GraphQL, SOAP)
-- **Authentication Configuration** (API Key, OAuth2, Basic, Bearer, etc.)
-- **Headers** (static and dynamic)
-- **Functions** (API endpoints/operations)
-- **Rate Limiting**
-- **Retry Logic**
-- **Caching**
-- **Monitoring**
-- **Circuit Breaker**
-
-```
-┌─────────────────────────────────────────────────────────┐
-│              DataSource: "CRM REST API"                 │
-├─────────────────────────────────────────────────────────┤
-│ BaseUrl: https://api.crm.com/v1                        │
-│ Protocol: REST                                          │
-│ Auth: OAuth2 (with client credentials)                 │
-│                                                          │
-│ Functions:                                              │
-│  ┌──────────────────────────────────────┐             │
-│  │ Function ID: "func-001"              │             │
-│  │ Name: getCustomers                   │             │
-│  │ Method: GET                          │             │
-│  │ Path: /customers                     │             │
-│  │ Parameters:                          │             │
-│  │   - status (query, optional)         │             │
-│  │   - limit (query, optional)          │             │
-│  │   - offset (query, optional)         │             │
-│  └──────────────────────────────────────┘             │
-│  ┌──────────────────────────────────────┐             │
-│  │ Function ID: "func-002"              │             │
-│  │ Name: getCustomerById                │             │
-│  │ Method: GET                          │             │
-│  │ Path: /customers/{id}                │             │
-│  │ Parameters:                          │             │
-│  │   - id (path, required)              │             │
-│  └──────────────────────────────────────┘             │
-│  ┌──────────────────────────────────────┐             │
-│  │ Function ID: "func-003"              │             │
-│  │ Name: getCustomerOrders              │             │
-│  │ Method: GET                          │             │
-│  │ Path: /customers/{id}/orders         │             │
-│  │ Parameters:                          │             │
-│  │   - id (path, required)              │             │
-│  │   - status (query, optional)         │             │
-│  └──────────────────────────────────────┘             │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 2. Collector (Workflow Definition)
-
-A **Collector** references **ONE DataSource** but can have **MULTIPLE Pipelines**. Each pipeline references a function from the DataSource.
-
-```
-┌──────────────────────────────────────────────────────────┐
-│         Collector: "Customer Data Collector"             │
-├──────────────────────────────────────────────────────────┤
-│ DataSource: "CRM REST API" (Single DataSource)          │
-│                                                           │
-│ Pipelines:                                               │
-│  ┌────────────────────────────────────┐                 │
-│  │ Pipeline 1: "Sync All Customers"   │                 │
-│  │ FunctionId: "func-001"             │                 │
-│  │ (Uses: getCustomers)               │                 │
-│  │                                     │                 │
-│  │ Processing Steps:                  │                 │
-│  │  1. API Call                       │                 │
-│  │  2. Pagination                     │                 │
-│  │  3. For-Each Customer              │                 │
-│  │     └─ Child Steps:                │                 │
-│  │        └─ API Call (func-003)      │                 │
-│  │        └─ Transform                │                 │
-│  │  4. Store to Database              │                 │
-│  └────────────────────────────────────┘                 │
-│  ┌────────────────────────────────────┐                 │
-│  │ Pipeline 2: "Get Customer Details" │                 │
-│  │ FunctionId: "func-002"             │                 │
-│  │ (Uses: getCustomerById)            │                 │
-│  │                                     │                 │
-│  │ Processing Steps:                  │                 │
-│  │  1. API Call                       │                 │
-│  │  2. Transform                      │                 │
-│  │  3. Store to Database              │                 │
-│  └────────────────────────────────────┘                 │
-└──────────────────────────────────────────────────────────┘
-```
-
-### 3. Pipeline (Execution Unit)
-
-A **Pipeline** is a specific execution flow that:
-
-1. References a **Function** from the DataSource
-2. Defines **Parameter Mappings** (how to get values from previous steps)
-3. Defines **Static Parameters** (hardcoded values)
-4. Contains **Processing Steps** (transformation logic)
+1. **DataSource** = API Definition Template (no credentials)
+2. **Collector** = Workflow Template (creator's test config)
+3. **CollectorInstance** = Tenant's Installation (tenant's own config)
 
 ---
 
-## 📝 Complete Example Flow
+## 📊 Complete Architecture
 
-### Step 1: Create DataSource
+```
+┌────────────────────────────────────────────────────────┐
+│                  DataSource (Template)                 │
+│                  "Shopify API"                         │
+├────────────────────────────────────────────────────────┤
+│  Defines WHAT the API looks like                      │
+│                                                         │
+│  Required Config Fields:                               │
+│    - shopUrl: "Your shop URL"                         │
+│    - apiKey: "Your API key"                           │
+│    - apiVersion: "API version"                        │
+│                                                         │
+│  Functions:                                            │
+│    - getProducts (GET /admin/products)                │
+│    - getOrders (GET /admin/orders)                    │
+│    - getCustomers (GET /admin/customers)              │
+│                                                         │
+│  NO ACTUAL CREDENTIALS STORED HERE                    │
+└────────────────────────────────────────────────────────┘
+                         ▼
+┌────────────────────────────────────────────────────────┐
+│            Collector (Workflow Template)               │
+│            Created by: Alice (Creator)                 │
+│            "Shopify Product Sync"                      │
+├────────────────────────────────────────────────────────┤
+│  DataSourceId: "shopify-api"                          │
+│  IsPublished: true                                     │
+│                                                         │
+│  Creator's Config (for testing only):                  │
+│    shopUrl: "alice-store.myshopify.com"               │
+│    apiKey: "alice-key-xxx"                            │
+│    apiVersion: "2024-01"                               │
+│                                                         │
+│  Pipelines:                                            │
+│    Pipeline 1: "Sync Products"                        │
+│      └─ Function: getProducts                         │
+│    Pipeline 2: "Sync Orders"                          │
+│      └─ Function: getOrders                           │
+└────────────────────────────────────────────────────────┘
+                         ▼
+        ┌────────────────────────────────┐
+        │  Published to Marketplace      │
+        │  Available for All Tenants     │
+        └────────────────────────────────┘
+                         ▼
+┌─────────────────────┬──────────────────────────────────┐
+│                     │                                  │
+▼                     ▼                                  ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│ CollectorInstance│ │ CollectorInstance│ │ CollectorInstance│
+│ Tenant A         │ │ Tenant B         │ │ Tenant C         │
+├──────────────────┤ ├──────────────────┤ ├──────────────────┤
+│ Collector:       │ │ Collector:       │ │ Collector:       │
+│ "Shopify Sync"   │ │ "Shopify Sync"   │ │ "Shopify Sync"   │
+│                  │ │                  │ │                  │
+│ Tenant A Config: │ │ Tenant B Config: │ │ Tenant C Config: │
+│ shopUrl:         │ │ shopUrl:         │ │ shopUrl:         │
+│ "tenant-a.shop"  │ │ "tenant-b.shop"  │ │ "tenant-c.shop"  │
+│ apiKey:          │ │ apiKey:          │ │ apiKey:          │
+│ "key-aaa"        │ │ "key-bbb"        │ │ "key-ccc"        │
+└──────────────────┘ └──────────────────┘ └──────────────────┘
+```
+
+---
+
+## 🔑 Key Concepts
+
+### 1. DataSource = API Template
+- **Purpose:** Define what the API looks like
+- **Contains:** 
+  - Config field definitions (what fields are needed)
+  - Functions (available operations)
+  - Parameter schemas
+- **Does NOT contain:** Actual URLs, actual API keys
+- **Example:** "Shopify API needs: shopUrl, apiKey, apiVersion"
+
+### 2. Collector = Workflow Template
+- **Purpose:** Define data collection workflow
+- **Created by:** One user (the creator)
+- **Contains:**
+  - Reference to DataSource
+  - Pipelines using DataSource functions
+  - Creator's config (for testing only)
+- **Can be published:** Yes, for other tenants to use
+- **Example:** "Shopify Product Sync" workflow
+
+### 3. CollectorInstance = Tenant's Installation
+- **Purpose:** Tenant's own installation of a collector
+- **Created when:** Tenant "installs" a published collector
+- **Contains:**
+  - Reference to Collector template
+  - **Tenant's OWN config** (their URL, their keys)
+  - Execution history
+  - Schedule settings
+- **Example:** Tenant A's installation with their Shopify credentials
+
+---
+
+## 🔄 Complete Workflows
+
+### Workflow 1: Creator Publishes Collector
+
+```mermaid
+sequenceDiagram
+    Creator->>DataSource: 1. Create "Shopify API" template
+    Note over DataSource: Defines: shopUrl, apiKey, functions
+    
+    Creator->>Collector: 2. Create "Shopify Sync" workflow
+    Note over Collector: Uses DataSource functions
+    Note over Collector: Stores creator's config for testing
+    
+    Creator->>Collector: 3. Test with creator's settings
+    Collector->>API: Call using creator's shopUrl + apiKey
+    
+    Creator->>Collector: 4. Publish to marketplace
+    Note over Collector: IsPublished = true
+```
+
+### Workflow 2: Tenant Uses Published Collector
+
+```mermaid
+sequenceDiagram
+    Tenant->>Marketplace: 1. Browse published collectors
+    Marketplace-->>Tenant: Show "Shopify Sync"
+    
+    Tenant->>CollectorInstance: 2. Install collector
+    Note over Tenant: Provide: shopUrl, apiKey
+    CollectorInstance->>DB: Store tenant's config
+    
+    Tenant->>CollectorInstance: 3. Execute
+    CollectorInstance->>Collector: Get pipeline definitions
+    Collector->>DataSource: Get function definitions
+    DataSource-->>CollectorInstance: Function: getProducts
+    CollectorInstance->>API: Call tenant's shopUrl with tenant's apiKey
+    API-->>CollectorInstance: Return data
+    CollectorInstance->>Tenant: Success
+```
+
+---
+
+## 📝 API Examples
+
+### Example 1: Creator Creates DataSource Template
 
 ```json
 POST /api/datasources/manual
 {
-  "name": "CRM REST API",
-  "description": "Customer relationship management API",
-  "version": "1.0.0",
+  "name": "Shopify API",
+  "description": "Shopify REST Admin API",
   "protocol": "REST",
-  "baseUrl": "https://api.crm.com/v1",
   
-  "authConfig": {
-    "type": "OAuth2",
-    "details": {
-      "tokenUrl": "https://api.crm.com/oauth/token",
-      "clientId": "{config.clientId}",
-      "clientSecret": "{config.clientSecret}",
-      "scopes": ["read", "write"]
-    },
-    "requiresTLS": true,
-    "tokenExpirationMinutes": 60,
-    "refreshTokenSupported": true
-  },
-  
-  "headers": [
+  "configFields": [
     {
-      "name": "Content-Type",
-      "value": "application/json",
+      "name": "shopUrl",
+      "type": "Text",
+      "label": "Shop URL",
+      "description": "Your Shopify store URL (e.g., mystore.myshopify.com)",
       "required": true,
-      "isDynamic": false
+      "placeholder": "mystore.myshopify.com"
     },
     {
-      "name": "X-API-Version",
-      "value": "2.1",
+      "name": "apiKey",
+      "type": "Password",
+      "label": "Admin API Access Token",
+      "description": "Your Shopify Admin API access token",
       "required": true,
-      "isDynamic": false
+      "encrypted": true
+    },
+    {
+      "name": "apiVersion",
+      "type": "Select",
+      "label": "API Version",
+      "options": [
+        {"value": "2024-01", "label": "2024-01 (Latest)"},
+        {"value": "2023-10", "label": "2023-10"}
+      ],
+      "default": "2024-01",
+      "required": true
     }
   ],
   
+  "authConfig": {
+    "type": "Custom",
+    "details": {
+      "headerName": "X-Shopify-Access-Token",
+      "headerValue": "{config.apiKey}"
+    }
+  },
+  
   "functions": [
     {
-      "id": "func-get-customers",
-      "name": "getCustomers",
-      "description": "Get all customers",
+      "id": "func-get-products",
+      "name": "getProducts",
+      "description": "Get all products from store",
       "method": "GET",
-      "path": "/customers",
+      "path": "/admin/api/{config.apiVersion}/products.json",
+      "parameters": [
+        {
+          "name": "limit",
+          "type": "number",
+          "location": "query",
+          "default": "50",
+          "description": "Number of products to return"
+        },
+        {
+          "name": "page_info",
+          "type": "string",
+          "location": "query",
+          "description": "Pagination cursor"
+        }
+      ],
+      "requiresAuth": true
+    },
+    {
+      "id": "func-get-orders",
+      "name": "getOrders",
+      "description": "Get orders from store",
+      "method": "GET",
+      "path": "/admin/api/{config.apiVersion}/orders.json",
       "parameters": [
         {
           "name": "status",
           "type": "string",
           "location": "query",
-          "required": false,
-          "description": "Filter by customer status"
+          "description": "Order status filter"
         },
         {
           "name": "limit",
           "type": "number",
           "location": "query",
-          "required": false,
-          "default": "100"
-        },
-        {
-          "name": "offset",
-          "type": "number",
-          "location": "query",
-          "required": false,
-          "default": "0"
+          "default": "50"
         }
       ],
-      "response": {
-        "expectedFormat": "application/json",
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
-              "email": { "type": "string" },
-              "status": { "type": "string" }
-            }
-          }
-        }
-      },
-      "requiresAuth": true
-    },
-    {
-      "id": "func-get-customer-orders",
-      "name": "getCustomerOrders",
-      "description": "Get orders for a specific customer",
-      "method": "GET",
-      "path": "/customers/{customerId}/orders",
-      "parameters": [
-        {
-          "name": "customerId",
-          "type": "string",
-          "location": "path",
-          "required": true,
-          "description": "Customer ID"
-        },
-        {
-          "name": "status",
-          "type": "string",
-          "location": "query",
-          "required": false,
-          "description": "Filter by order status"
-        }
-      ],
-      "response": {
-        "expectedFormat": "application/json",
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "orderId": { "type": "string" },
-              "amount": { "type": "number" },
-              "status": { "type": "string" },
-              "createdAt": { "type": "string" }
-            }
-          }
-        }
-      },
       "requiresAuth": true
     }
   ],
   
-  "rateLimitConfig": {
-    "requestsPerMinute": 100,
-    "requestsPerHour": 5000,
-    "strategy": "sliding_window"
-  },
-  
-  "retryConfig": {
-    "enabled": true,
-    "maxAttempts": 3,
-    "initialDelayMs": 1000,
-    "maxDelayMs": 30000,
-    "backoffStrategy": "exponential",
-    "retryableStatusCodes": [429, 500, 502, 503, 504],
-    "retryOnTimeout": true
-  },
-  
-  "category": "CRM",
-  "tags": ["crm", "customers", "orders"]
+  "category": "E-commerce",
+  "tags": ["shopify", "ecommerce", "products", "orders"]
 }
 ```
 
-**Response:**
-```json
-{
-  "id": "datasource-123",
-  "name": "CRM REST API",
-  "version": "1.0.0",
-  "protocol": "REST",
-  "baseUrl": "https://api.crm.com/v1",
-  "functionCount": 2,
-  "isActive": true,
-  "createdAt": "2025-10-28T10:00:00Z"
-}
-```
+**Key Points:**
+- `configFields` defines WHAT config is needed
+- `{config.apiKey}` and `{config.apiVersion}` are placeholders
+- NO actual values stored in DataSource
 
----
-
-### Step 2: Create Collector with Pipelines
-
-Now create a collector that uses functions from the DataSource:
+### Example 2: Creator Creates Collector with Test Config
 
 ```json
 POST /api/collectors
 {
-  "name": "Customer Data Collector",
-  "description": "Collects customer data and their orders",
-  "dataSourceId": "datasource-123",
+  "name": "Shopify Product & Order Sync",
+  "description": "Syncs products and orders from Shopify",
+  "dataSourceId": "ds-shopify-123",
+  
+  "creatorConfig": {
+    "shopUrl": "alice-test-store.myshopify.com",
+    "apiKey": "shpat_alice_test_key_12345",
+    "apiVersion": "2024-01"
+  },
   
   "pipelines": [
     {
-      "name": "Main Customer Sync Pipeline",
-      "description": "Syncs all customers and their orders",
-      "functionId": "func-get-customers",
-      
+      "name": "Product Sync Pipeline",
+      "functionId": "func-get-products",
       "staticParameters": {
-        "status": "active",
         "limit": 100
       },
-      
       "dataIngestion": {
         "strategy": "full-sync",
-        "syncMode": "full",
-        "batchSize": 100,
-        "parallelization": false,
-        "conflictResolution": "latest"
+        "batchSize": 100
       },
-      
       "processingSteps": [
         {
-          "name": "Fetch Customers",
+          "name": "Fetch Products",
           "type": "api-call",
-          "enabled": true,
-          "config": {}
+          "enabled": true
         },
         {
-          "name": "Paginate Results",
+          "name": "Paginate",
           "type": "pagination",
           "enabled": true,
           "config": {
-            "type": "offset",
-            "pageSize": 100,
-            "maxPages": 10,
-            "limitParam": "limit",
-            "offsetParam": "offset"
+            "type": "cursor",
+            "cursorParam": "page_info"
           }
         },
         {
-          "name": "Process Each Customer",
-          "type": "for-each",
-          "enabled": true,
-          "config": {},
-          "childSteps": [
-            {
-              "name": "Fetch Customer Orders",
-              "type": "api-call",
-              "enabled": true,
-              "config": {
-                "functionId": "func-get-customer-orders",
-                "parameterMappings": {
-                  "customerId": "$.currentItem.id"
-                }
-              }
-            },
-            {
-              "name": "Transform Orders",
-              "type": "transform",
-              "enabled": true,
-              "config": {
-                "mapping": {
-                  "customerId": "$.customer.id",
-                  "customerName": "$.customer.name",
-                  "orders": "$.orders"
-                }
-              }
-            },
-            {
-              "name": "Filter Active Orders",
-              "type": "filter",
-              "enabled": true,
-              "config": {
-                "condition": "$.status == 'active'"
-              }
-            }
-          ]
+          "name": "Transform",
+          "type": "transform",
+          "enabled": true
         },
         {
-          "name": "Store to Database",
+          "name": "Store",
           "type": "store-database",
-          "enabled": true,
-          "config": {
-            "table": "customers",
-            "mode": "upsert",
-            "keyField": "id"
-          }
+          "enabled": true
         }
       ]
     },
     {
-      "name": "Customer Orders Pipeline",
-      "description": "Gets orders for specific customer",
-      "functionId": "func-get-customer-orders",
-      
-      "parameterMappings": {
-        "customerId": "$.input.customerId"
-      },
-      
+      "name": "Order Sync Pipeline",
+      "functionId": "func-get-orders",
       "staticParameters": {
-        "status": "pending"
+        "status": "any",
+        "limit": 100
       },
-      
       "processingSteps": [
         {
           "name": "Fetch Orders",
           "type": "api-call",
-          "enabled": true,
-          "config": {}
+          "enabled": true
         },
         {
-          "name": "Transform Data",
-          "type": "transform",
-          "enabled": true,
-          "config": {}
-        },
-        {
-          "name": "Store to Database",
+          "name": "Store",
           "type": "store-database",
-          "enabled": true,
-          "config": {
-            "table": "customer_orders"
-          }
+          "enabled": true
         }
       ]
     }
@@ -416,351 +336,329 @@ POST /api/collectors
 }
 ```
 
----
+**Key Points:**
+- `creatorConfig` is Alice's test configuration
+- Used only for Alice to test the collector
+- NOT used when other tenants execute
 
-### Step 3: Execute Pipeline
+### Example 3: Creator Tests Collector
 
 ```json
 POST /api/collectors/{collector-id}/execute
 {
-  "pipelineId": "{pipeline-id}",
-  "parameters": {
-    "customerId": "cust-12345"
-  },
-  "dryRun": false
+  "pipelineId": "pipeline-products",
+  "useCreatorConfig": true
+}
+
+// System will:
+// 1. Use creatorConfig from collector
+// 2. Build URL: https://alice-test-store.myshopify.com/admin/api/2024-01/products.json
+// 3. Use Alice's API key
+// 4. Execute and return results to Alice
+```
+
+### Example 4: Creator Publishes Collector
+
+```json
+POST /api/collectors/{collector-id}/publish
+{
+  "version": "1.0.0",
+  "releaseNotes": "Initial release - syncs Shopify products and orders"
+}
+
+// Response:
+{
+  "id": "collector-123",
+  "name": "Shopify Product & Order Sync",
+  "isPublished": true,
+  "publishedAt": "2025-10-28T10:00:00Z",
+  "publishedBy": "alice@example.com",
+  "marketplaceUrl": "/marketplace/collectors/collector-123"
 }
 ```
 
-**What Happens During Execution:**
-
-1. **Load DataSource Configuration**
-   - Get BaseURL, Auth, Headers, Rate Limits
-   - Get the Function definition for `func-get-customer-orders`
-
-2. **Resolve Parameters**
-   - Static Parameters: `status: "pending"`
-   - Runtime Parameters: `customerId: "cust-12345"`
-   - Parameter Mappings: Applied from previous steps
-
-3. **Build API Request**
-   ```
-   GET https://api.crm.com/v1/customers/cust-12345/orders?status=pending
-   Headers:
-     Authorization: Bearer {oauth-token}
-     Content-Type: application/json
-     X-API-Version: 2.1
-   ```
-
-4. **Execute with DataSource Settings**
-   - Apply Rate Limiting (100 req/min)
-   - Enable Retry Logic (3 attempts, exponential backoff)
-   - Apply Circuit Breaker if configured
-
-5. **Process Response Through Steps**
-   - API Call → Transform → Store
-
-6. **Return Execution Result**
-
----
-
-## 🔄 Key Workflows
-
-### Workflow 1: Generate DataSource from Swagger
+### Example 5: Tenant Browses Marketplace
 
 ```json
-POST /api/datasources/generate/swagger
+GET /api/marketplace/collectors?category=ecommerce
+
+// Response:
 {
-  "sourceType": "SwaggerUrl",
-  "sourceUrl": "https://api.example.com/swagger.json",
-  "dataSourceName": "Example API",
-  "description": "Generated from Swagger",
-  "baseUrlOverride": "https://api.example.com/v2",
-  "filterOperations": true,
-  "includedOperations": [
-    "getUsers",
-    "getUserById",
-    "createUser"
-  ],
-  "generateModels": true,
-  "validateRequests": true,
-  "defaultRateLimit": 100
-}
-```
-
-**What Happens:**
-1. System fetches Swagger spec from URL
-2. Parses all operations (endpoints)
-3. Filters to only included operations
-4. Generates Function definitions for each operation
-5. Extracts auth configuration from Swagger
-6. Creates DataSource with all functions
-
----
-
-### Workflow 2: Add Function to Existing DataSource
-
-```json
-POST /api/datasources/{id}/functions
-{
-  "id": "func-create-customer",
-  "name": "createCustomer",
-  "description": "Create a new customer",
-  "method": "POST",
-  "path": "/customers",
-  "requestBody": {
-    "schema": {
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "phone": { "type": "string" }
-      },
-      "required": ["name", "email"]
-    },
-    "contentType": "application/json",
-    "required": true
-  },
-  "response": {
-    "expectedFormat": "application/json",
-    "statusCodes": {
-      "201": {
-        "description": "Customer created successfully",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "email": { "type": "string" }
+  "collectors": [
+    {
+      "id": "collector-123",
+      "name": "Shopify Product & Order Sync",
+      "description": "Syncs products and orders from Shopify",
+      "publisher": "alice@example.com",
+      "rating": 4.8,
+      "installs": 1250,
+      "dataSource": {
+        "name": "Shopify API",
+        "requiredConfig": [
+          {
+            "name": "shopUrl",
+            "label": "Shop URL",
+            "type": "Text",
+            "required": true
+          },
+          {
+            "name": "apiKey",
+            "label": "API Key",
+            "type": "Password",
+            "required": true
           }
-        }
-      },
-      "400": {
-        "description": "Bad request"
+        ]
       }
     }
-  },
-  "requiresAuth": true
+  ]
 }
 ```
 
----
-
-### Workflow 3: Test DataSource Connection
+### Example 6: Tenant Installs Collector
 
 ```json
-POST /api/datasources/{id}/test
+POST /api/collectors/{collector-id}/install
 {
-  "functionId": "func-get-customers",
-  "testParameters": {
-    "limit": 5,
-    "status": "active"
+  "instanceName": "My Shopify Sync",
+  "tenantConfig": {
+    "shopUrl": "tenant-bob-store.myshopify.com",
+    "apiKey": "shpat_bob_key_67890",
+    "apiVersion": "2024-01"
   }
 }
+
+// Response:
+{
+  "instanceId": "instance-456",
+  "collectorId": "collector-123",
+  "collectorName": "Shopify Product & Order Sync",
+  "tenantId": "tenant-bob",
+  "instanceName": "My Shopify Sync",
+  "status": "Active",
+  "installedAt": "2025-10-28T11:00:00Z"
+}
 ```
 
-**Response:**
+### Example 7: Tenant Executes Their Instance
+
 ```json
+POST /api/collector-instances/{instance-id}/execute
 {
-  "success": true,
-  "message": "Connection test successful",
-  "responseTime": 234,
-  "statusCode": 200,
-  "responseData": {
-    "customers": [
-      { "id": "1", "name": "John Doe" },
-      { "id": "2", "name": "Jane Smith" }
-    ]
-  },
-  "testedAt": "2025-10-28T10:30:00Z"
+  "pipelineId": "pipeline-products"
+}
+
+// System will:
+// 1. Load CollectorInstance (instance-456)
+// 2. Get tenant's config:
+//    - shopUrl: "tenant-bob-store.myshopify.com"
+//    - apiKey: "shpat_bob_key_67890"
+// 3. Load Collector template (pipeline definitions)
+// 4. Load DataSource (function definitions)
+// 5. Resolve function path:
+//    /admin/api/{config.apiVersion}/products.json
+//    → /admin/api/2024-01/products.json
+// 6. Build URL:
+//    https://tenant-bob-store.myshopify.com/admin/api/2024-01/products.json
+// 7. Add header:
+//    X-Shopify-Access-Token: shpat_bob_key_67890
+// 8. Execute API call with BOB's credentials
+// 9. Process through pipeline steps
+// 10. Return results to Bob
+```
+
+### Example 8: Tenant Views Execution History
+
+```json
+GET /api/collector-instances/{instance-id}/executions
+
+// Response:
+{
+  "instanceId": "instance-456",
+  "instanceName": "My Shopify Sync",
+  "totalExecutions": 45,
+  "successfulExecutions": 43,
+  "failedExecutions": 2,
+  "lastExecutedAt": "2025-10-28T14:30:00Z",
+  
+  "recentExecutions": [
+    {
+      "executionId": "exec-789",
+      "pipelineId": "pipeline-products",
+      "pipelineName": "Product Sync Pipeline",
+      "startedAt": "2025-10-28T14:30:00Z",
+      "completedAt": "2025-10-28T14:31:15Z",
+      "status": "Success",
+      "recordsProcessed": 1250,
+      "durationMs": 75000
+    },
+    {
+      "executionId": "exec-788",
+      "pipelineId": "pipeline-orders",
+      "pipelineName": "Order Sync Pipeline",
+      "startedAt": "2025-10-28T14:00:00Z",
+      "completedAt": "2025-10-28T14:00:45Z",
+      "status": "Success",
+      "recordsProcessed": 523,
+      "durationMs": 45000
+    }
+  ]
 }
 ```
 
 ---
 
-## 🎯 Key Benefits
+## 🗃️ Complete Database Schema
 
-### 1. **Reusability**
-- Define API configuration once in DataSource
-- Reuse across multiple collectors and pipelines
-- Update DataSource auth/headers → all collectors get updated config
-
-### 2. **Maintainability**
-- Single source of truth for API configuration
-- Easy to update rate limits, retry logic, auth
-- Function definitions are version-controlled
-
-### 3. **Validation**
-- Validate function exists before creating pipeline
-- Validate parameter mappings against function schema
-- Type checking for parameters
-
-### 4. **Flexibility**
-- One DataSource → Many Pipelines
-- Each pipeline can use different functions
-- Override parameters per pipeline
-
-### 5. **Monitoring**
-- Track usage per function
-- Monitor rate limits per DataSource
-- Centralized error handling
-
----
-
-## 🔒 Validation Rules
-
-### DataSource Validation
-1. ✅ At least one function must be defined
-2. ✅ Function IDs must be unique within DataSource
-3. ✅ Function paths must be valid URL paths
-4. ✅ Required parameters must be marked
-5. ✅ Auth configuration must be valid for auth type
-
-### Collector Validation
-1. ✅ Must reference exactly ONE DataSource
-2. ✅ All pipelines must use functions from that DataSource
-3. ✅ Function IDs must exist in the DataSource
-4. ✅ Parameter mappings must match function parameters
-5. ✅ Static parameters must match function parameter types
-
-### Pipeline Validation
-1. ✅ Function ID must exist in parent collector's DataSource
-2. ✅ Required function parameters must have values (static or mapped)
-3. ✅ Parameter types must match function definition
-4. ✅ Processing steps must be valid for the function type
-
----
-
-## 📊 Database Schema Changes
-
-### DataSource Table
+### 1. DataSources Table (Templates)
 ```sql
 CREATE TABLE data_sources (
     id UUID PRIMARY KEY,
-    tenant_id UUID NOT NULL,
+    tenant_id UUID NOT NULL, -- Creator's tenant
+    
     name VARCHAR(200) NOT NULL,
     description TEXT,
-    version VARCHAR(50),
-    image_url VARCHAR(500),
-    protocol INT NOT NULL, -- REST, GraphQL, SOAP, etc.
-    type INT NOT NULL, -- Manual, SwaggerUrl, etc.
-    source TEXT, -- URL or file content for generated sources
-    base_url VARCHAR(500),
+    protocol INT NOT NULL,
     
-    -- JSON Configurations
-    config_fields JSONB, -- List<ConfigField>
-    auth_config JSONB, -- AuthConfiguration
-    headers JSONB, -- List<HeaderDefinition>
-    functions JSONB NOT NULL, -- List<FunctionDefinition> - CRITICAL
+    -- Config Field Definitions (NOT actual values)
+    config_fields JSONB NOT NULL, -- What fields are needed
+    
+    -- Auth template (with placeholders like {config.apiKey})
+    auth_config JSONB,
+    
+    -- Headers template (with placeholders)
+    headers JSONB,
+    
+    -- Functions (operations available)
+    functions JSONB NOT NULL,
+    
+    -- Other configs...
     rate_limit_config JSONB,
     cache_config JSONB,
-    retry_config JSONB,
-    monitoring_config JSONB,
-    circuit_breaker_config JSONB,
     
-    -- Metadata
     category VARCHAR(100),
-    tags JSONB, -- List<string>
-    metadata JSONB, -- Dictionary
+    tags JSONB,
     
-    -- Status
     is_active BOOLEAN DEFAULT true,
-    last_tested_at TIMESTAMP,
-    last_test_result BOOLEAN,
-    last_test_error TEXT,
-    
-    -- Audit
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
-    created_by VARCHAR(100),
-    updated_by VARCHAR(100),
-    is_deleted BOOLEAN DEFAULT false,
-    deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100)
+    created_by VARCHAR(100)
 );
 ```
 
-### Pipeline Table
+### 2. DataCollectors Table (Workflow Templates)
 ```sql
-CREATE TABLE pipelines (
+CREATE TABLE data_collectors (
     id UUID PRIMARY KEY,
-    tenant_id UUID NOT NULL,
-    data_collector_id UUID NOT NULL,
-    data_source_id UUID NOT NULL,
+    tenant_id UUID NOT NULL, -- Creator's tenant
     
     name VARCHAR(200) NOT NULL,
     description TEXT,
+    version INT DEFAULT 1,
+    stage VARCHAR(50), -- Draft, Dev, Stage, Production
     
-    -- Function Reference - CRITICAL
-    function_id VARCHAR(100) NOT NULL, -- References DataSource.Functions[].Id
-    function_name VARCHAR(200), -- Override display name
-    api_path VARCHAR(500), -- Override if needed
-    method VARCHAR(10), -- Override if needed
+    data_source_id UUID NOT NULL,
     
-    is_enabled BOOLEAN DEFAULT true,
+    -- Publishing
+    is_published BOOLEAN DEFAULT false,
+    published_at TIMESTAMP,
+    published_by VARCHAR(100),
     
-    -- JSON Configurations
-    parameter_mappings JSONB, -- Dictionary<string, string>
-    static_parameters JSONB, -- Dictionary<string, object>
-    data_ingestion JSONB, -- DataIngestionConfiguration
+    -- Creator's config (for testing only)
+    creator_config JSONB, -- Creator's actual values
     
-    -- Audit
+    -- Approval fields...
+    approval_status VARCHAR(50),
+    
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
     created_by VARCHAR(100),
-    updated_by VARCHAR(100),
-    is_deleted BOOLEAN DEFAULT false,
-    deleted_at TIMESTAMP,
-    deleted_by VARCHAR(100),
     
-    FOREIGN KEY (data_collector_id) REFERENCES data_collectors(id),
     FOREIGN KEY (data_source_id) REFERENCES data_sources(id)
 );
 ```
 
----
+### 3. CollectorInstances Table (Tenant Installations)
+```sql
+CREATE TABLE collector_instances (
+    id UUID PRIMARY KEY,
+    
+    collector_id UUID NOT NULL,
+    tenant_id UUID NOT NULL, -- Tenant who installed
+    
+    -- TENANT'S OWN CONFIG (their actual values)
+    tenant_config JSONB NOT NULL, -- Tenant's shopUrl, apiKey, etc.
+    
+    instance_name VARCHAR(200),
+    is_active BOOLEAN DEFAULT true,
+    
+    -- Execution stats
+    last_executed_at TIMESTAMP,
+    last_successful_execution_at TIMESTAMP,
+    total_executions INT DEFAULT 0,
+    successful_executions INT DEFAULT 0,
+    failed_executions INT DEFAULT 0,
+    
+    -- Scheduling
+    schedule_enabled BOOLEAN DEFAULT false,
+    schedule_config JSONB,
+    
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    
+    FOREIGN KEY (collector_id) REFERENCES data_collectors(id),
+    UNIQUE (collector_id, tenant_id)
+);
+```
 
-## 🚀 Migration Path
-
-### For Existing Systems
-
-1. **Update DataSource Entity**
-   - Add Functions JSON column
-   - Migrate existing API paths to function definitions
-   - Add new configuration columns
-
-2. **Update Pipeline Entity**
-   - Add FunctionId column
-   - Migrate ApiPath to function references
-   - Add parameter mappings support
-
-3. **Update Services**
-   - Implement function resolution logic
-   - Add parameter mapping engine
-   - Update execution engine
-
-4. **Update Controllers**
-   - Add function management endpoints
-   - Update pipeline creation to require function IDs
-   - Add validation endpoints
+### 4. CollectorExecutions Table (Execution History)
+```sql
+CREATE TABLE collector_executions (
+    id UUID PRIMARY KEY,
+    
+    collector_instance_id UUID NOT NULL,
+    pipeline_id UUID NOT NULL,
+    
+    started_at TIMESTAMP NOT NULL,
+    completed_at TIMESTAMP,
+    status VARCHAR(50), -- Running, Success, Failed
+    
+    records_processed INT DEFAULT 0,
+    error_message TEXT,
+    execution_log JSONB,
+    
+    duration_ms INT,
+    
+    created_at TIMESTAMP NOT NULL,
+    
+    FOREIGN KEY (collector_instance_id) REFERENCES collector_instances(id)
+);
+```
 
 ---
 
 ## ✅ Summary
 
-### Before (Simple Approach)
-- Pipeline stored API path directly
-- Limited configuration
-- Hard to maintain
-- No reusability
+### Key Differences from Previous Understanding
 
-### After (Function-Based Approach)
-- DataSource stores complete API config + functions
-- Pipelines reference functions by ID
-- Easy to maintain and update
-- Full reusability across collectors
-- Complete validation support
-- Comprehensive execution configuration
+| Aspect | Previous (Wrong) | Corrected |
+|--------|-----------------|-----------|
+| **DataSource Config** | Stores actual URLs/keys | Stores field definitions only |
+| **Collector Config** | Uses DataSource config | Stores creator's test config |
+| **Tenant Execution** | Uses DataSource config | Uses tenant's own config from CollectorInstance |
+| **Reusability** | Same config for all | Each tenant has own config |
+| **Publishing** | Not applicable | Collectors can be published |
+
+### Correct Flow
+
+1. **Creator** defines DataSource template (what fields needed)
+2. **Creator** creates Collector with their test config
+3. **Creator** tests with their config
+4. **Creator** publishes to marketplace
+5. **Tenant** browses marketplace
+6. **Tenant** installs collector with THEIR config
+7. **Tenant** executes using THEIR config
+
+**Critical:** Each tenant's execution uses their own credentials, not the creator's!
 
 ---
 
-**End of Architecture Guide**
+**This is the correct architecture!** 🎯
