@@ -119,6 +119,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton<DataCollector.Application.Services.Parsers.SwaggerParser>();
+builder.Services.AddSingleton<DataCollector.Application.Services.Parsers.GraphQLParser>();
+builder.Services.AddSingleton<DataCollector.Application.Services.Parsers.WsdlParser>();
+
 // Register Application Services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

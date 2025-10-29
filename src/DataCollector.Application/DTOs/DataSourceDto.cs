@@ -1,4 +1,6 @@
 using DataCollector.Domain.Entities;
+using System;
+using System.Collections.Generic;
 
 namespace DataCollector.Application.DTOs;
 
