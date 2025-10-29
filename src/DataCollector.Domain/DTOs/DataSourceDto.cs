@@ -2,7 +2,7 @@ using DataCollector.Domain.Entities;
 using System;
 using System.Collections.Generic;
 
-namespace DataCollector.Application.DTOs;
+namespace DataCollector.Domain.DTOs;
 
 // ==================== DATA SOURCE DTOs ====================
 

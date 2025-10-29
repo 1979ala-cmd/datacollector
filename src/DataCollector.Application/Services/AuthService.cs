@@ -1,4 +1,4 @@
-using DataCollector.Application.DTOs;
+using DataCollector.Domain.DTOs;
 using DataCollector.Application.Interfaces;
 using DataCollector.Domain.Entities;
 using DataCollector.Domain.Exceptions;

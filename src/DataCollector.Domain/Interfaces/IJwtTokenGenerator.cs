@@ -1,6 +1,8 @@
 using DataCollector.Domain.Entities;
+using System;
+using System.Collections.Generic;
 
-namespace DataCollector.Application.Interfaces;
+namespace DataCollector.Domain.Interfaces;
 
 public interface IJwtTokenGenerator
 {

@@ -1,5 +1,10 @@
-using DataCollector.Application.DTOs;
 
+using DataCollector.Domain.DTOs;
+using DataCollector.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 namespace DataCollector.Application.Interfaces;
 
 /// <summary>
@@ -111,16 +116,16 @@ public interface IDataCollectorService
     /// Execute a specific pipeline in a collector
     /// Resolves function from DataSource, applies parameter mappings, and executes
     /// </summary>
-    Task<CollectorExecutionResult> ExecuteAsync(
+    Task<Doamin.DTOs.CollectorExecutionResult> ExecuteAsync(
         Guid tenantId, 
         Guid collectorId, 
-        ExecuteCollectorRequest request,
+        Doamin.DTOs.ExecuteCollectorRequest request,
         CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Execute all active pipelines in a collector sequentially
     /// </summary>
-    Task<List<CollectorExecutionResult>> ExecuteAllPipelinesAsync(
+    Task<List<Doamin.DTOs.CollectorExecutionResult>> ExecuteAllPipelinesAsync(
         Guid tenantId,
         Guid collectorId,
         CancellationToken cancellationToken = default);
@@ -128,7 +133,7 @@ public interface IDataCollectorService
     /// <summary>
     /// Dry run - validate and simulate execution without making actual API calls
     /// </summary>
-    Task<CollectorExecutionResult> DryRunAsync(
+    Task<Doamin.DTOs.CollectorExecutionResult> DryRunAsync(
         Guid tenantId,
         Guid collectorId,
         Guid pipelineId,

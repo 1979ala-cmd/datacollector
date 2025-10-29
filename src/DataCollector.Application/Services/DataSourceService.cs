@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text;
 using System.Net.Http.Headers;
-using DataCollector.Application.DTOs;
+
 using DataCollector.Application.Interfaces;
 using DataCollector.Application.Services.Parsers;
 using DataCollector.Domain.Entities;
@@ -9,6 +9,10 @@ using DataCollector.Domain.Exceptions;
 using DataCollector.Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using DataCollector.Domain.DTOs;
+using System.Threading;
+using System;
 
 namespace DataCollector.Application.Services;
 

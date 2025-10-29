@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using DataCollector.Application.DTOs;
 using DataCollector.Application.Interfaces;

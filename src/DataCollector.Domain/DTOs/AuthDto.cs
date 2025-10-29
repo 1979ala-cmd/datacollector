@@ -1,4 +1,4 @@
-namespace DataCollector.Application.DTOs;
+namespace DataCollector.Domain.DTOs;
 public record LoginRequest(string Email, string Password);
 public record LoginResponse(string AccessToken, string RefreshToken, int ExpiresIn, string TokenType, UserDto User);
 public record RefreshTokenRequest(string RefreshToken);

@@ -1,5 +1,5 @@
 using DataCollector.Domain.Enums;
-namespace DataCollector.Application.DTOs;
+namespace DataCollector.Domain.DTOs;
 
 // ============================================================================
 // Collector DTOs
@@ -67,6 +67,12 @@ public record CreateProcessingStepRequest(
     bool Enabled,
     Dictionary<string, object>? Config,
     List<CreateProcessingStepRequest>? ChildSteps
+);
+
+public record UpdateCollectorRequest(
+    string? Name,
+    string? Description,
+    bool? IsActive
 );
 
 // ============================================================================
@@ -140,7 +146,7 @@ public record IncrementalConfigurationDto(
 public record ExecuteCollectorRequest(
     Guid PipelineId,
     Dictionary<string, object>? Parameters, // Runtime parameter overrides
-    bool DryRun // If true, validate but don't execute
+    bool DryRun = false // If true, validate but don't execute
 );
 
 public record CollectorExecutionResult(
@@ -262,4 +268,84 @@ public record PipelineStatsDto(
     double SuccessRate,
     int AverageExecutionTime,
     int TotalRecordsProcessed
+);
+
+// ============================================================================
+// DataSource DTO - ADDED (was missing)
+// ============================================================================
+
+/// <summary>
+/// Basic DataSource information for collector details
+/// </summary>
+public record DataSourceDto(
+    Guid Id,
+    string Name,
+    string Description,
+    string Version,
+    int Protocol, // 0=REST, 1=GraphQL, 2=SOAP
+    string BaseUrl,
+    bool IsActive,
+    int FunctionCount,
+    DateTime CreatedAt
+);
+
+// ============================================================================
+// Function Definition DTO - ADDED (was missing)
+// ============================================================================
+
+/// <summary>
+/// Function definition from DataSource
+/// </summary>
+public record FunctionDefinitionDto(
+    string Id,
+    string Name,
+    string Description,
+    string Method,
+    string Path,
+    List<FunctionParameterDto> Parameters,
+    FunctionRequestBodyDto? RequestBody,
+    FunctionResponseDto? Response,
+    bool RequiresAuth,
+    List<string>? Scopes,
+    TimeSpan? Timeout,
+    bool IsDeprecated,
+    string? DeprecationMessage
+);
+
+public record FunctionParameterDto(
+    string Name,
+    string Type, // string, integer, boolean, etc.
+    string Location, // query, path, header, body
+    bool Required,
+    string? Description,
+    string? Default,
+    ValidationRulesDto? Validation,
+    List<string>? Examples
+);
+
+
+public record FunctionRequestBodyDto(
+    Dictionary<string, object> Schema,
+    string? TemplateRef,
+    string ContentType,
+    bool Required
+);
+
+public record FunctionResponseDto(
+    string ExpectedFormat,
+    Dictionary<string, object> Schema,
+    Dictionary<string, ResponseStatusCodeDto>? StatusCodes,
+    List<HeaderDefinitionDto>? Headers
+);
+
+public record ResponseStatusCodeDto(
+    string Description,
+    Dictionary<string, object>? Schema
+);
+
+public record HeaderDefinitionDto(
+    string Name,
+    string Value,
+    bool Required,
+    bool IsDynamic
 );

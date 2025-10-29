@@ -1,4 +1,7 @@
-using DataCollector.Application.DTOs;
+
+using DataCollector.Domain.DTOs;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DataCollector.Application.Interfaces;
 

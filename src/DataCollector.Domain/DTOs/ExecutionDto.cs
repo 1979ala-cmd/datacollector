@@ -1,6 +1,6 @@
 using DataCollector.Domain.Enums;
 
-namespace DataCollector.Application.DTOs;
+namespace DataCollector.Domain.DTOs;
 
 public record CollectorExecutionResult(
     Guid ExecutionId,
